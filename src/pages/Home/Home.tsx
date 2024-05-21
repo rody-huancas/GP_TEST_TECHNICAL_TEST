@@ -1,8 +1,11 @@
 import { People } from "@/data";
 import { Person } from "@/models";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Checkbox } from "@mui/material";
 import { DataGrid, GridRenderCellParams } from "@mui/x-data-grid";
+import { useDispatch } from "react-redux";
+import { addFavorite, addPeople } from "@/redux/states";
+import store from "@/redux/store";
 
 export interface HomeProps {
   // types...
@@ -11,16 +14,15 @@ export interface HomeProps {
 const Home: React.FC<HomeProps> = ({}) => {
   const [selectedPeople, setSelectedPeople] = useState<Person[]>([]);
   const pageSize = 5;
+  const dispatch = useDispatch()
 
-  const findPerson = (person: Person) =>
-    !!selectedPeople.find((p) => p.id === person.id);
-  const filterPerson = (person: Person) =>
-    selectedPeople.filter((p) => p.id !== person.id);
+  const findPerson = (person: Person) => !!favoritePeople.find(p => p.id === person.id);
+  const filterPerson = (person: Person) => favoritePeople.filter(p => p.id !== person.id);
 
   const handleChange = (person: Person) => {
-    setSelectedPeople(
-      findPerson(person) ? filterPerson(person) : [...selectedPeople, person]
-    );
+    const filteredPeople = findPerson(person) ? filterPerson(person) : [...selectedPeople, person]; 
+    dispatch(addFavorite(filterPerson))
+    setSelectedPeople( filteredPeople );
   };
 
   const columns = [
@@ -63,9 +65,14 @@ const Home: React.FC<HomeProps> = ({}) => {
     },
   ];
 
+  useEffect(() => {
+    dispatch(addPeople(People));
+  }, [])
+  
+
   return (
     <DataGrid
-      rows={People}
+      rows={store.getState().people}
       columns={columns}
       disableColumnSelector
       disableRowSelectionOnClick
